@@ -6,7 +6,6 @@ import bs4 as bs
 import os
 import re
 import csv
-import numpy as np  
 
 ssl._create_default_https_context = ssl._create_unverified_context
 ######################
