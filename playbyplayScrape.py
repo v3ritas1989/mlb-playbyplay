@@ -6,6 +6,7 @@ import bs4 as bs
 import os
 import re
 import csv
+import numpy as np  
 
 ssl._create_default_https_context = ssl._create_unverified_context
 ######################
@@ -62,32 +63,43 @@ def openPage(site,hdr,proxy,params):
 
 def getPlayByPlayData(soup):
 # This function identifies the wanted table within the given and passed webpage from function openPage()
-# After identification with beautiful soup, it will loads the table into the multidim. list data[]
+# After identification with beautiful soup, it will load the table into the multidim. list data[]
     soup = soup.find('div',  id='all_play_by_play')
     soup = bs.BeautifulSoup(soup.find(text=lambda text:isinstance(text, Comment)),'lxml')
     table = soup.find('table', id='play_by_play')
     table_body = table.find('tbody')
 
     data = []
-    rows = table_body.find_all('tr')
+    # finding all tr rows inside the designated table
+    rows = table_body.find_all('tr', class_=lambda x: x != 'pbp_summary_bottom' and x != 'pbp_summary_top' and x != 'ingame_substitution')
+    # loop through found tr rows
     for row in rows:
+        # In each row search for th tags and strip it from tags (only use text)
+        colsth = row.find_all('th')
+        colsth = [ele.text.strip() for ele in colsth]
+        # In each row search for td tags and strip it from tags (only use text)
         cols = row.find_all('td')
         cols = [ele.text.strip() for ele in cols]
-        data.append([ele for ele in cols if ele])
+        # adding td elemts to th elemts as a list
+        for ele in cols:
+            colsth.append(ele)
+        # add all elemts of this row as a list into the data variable
+        data.append([ele for ele in colsth if ele])
 
 #####################################
 ##    Printing the multdim list     #
 #####################################
 ##    for row in data:
 ##        for elem in row:
-##            print(elem, end=' ')
+##            print(elem, end='; ')
 ##        print()
     print('PlaybyPlay data has been saved to variable')
     return(data)
+    
 
 def ExportToCSV(Data):
 ## This function is for writing the data taken from function getPlayByPlayData() to a file in a local folder.
-    with open(filename, 'w') as f:
+    with open(filename, 'w', newline='') as f:
        writer = csv.writer(f, delimiter=';')
        writer.writerows(data)
     print('PlaybyPlay data variable has been saved to file', filename)
